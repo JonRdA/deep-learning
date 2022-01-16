@@ -73,6 +73,7 @@ from sklearn.datasets import load_boston
 
 n = 10     # number of values, instances
 p = 3       # number of variables
+lr = .001
 
 # Create random numbers between 0 & 100 and add column of ones for constant.
 x = np.random.random((n,p)) * 100
@@ -92,12 +93,14 @@ Y = 37 * X[:, 0] + 11 * X[:,1] - 12 * X[:,2] + 7 * X[:,3]# + .00005*np.random.ra
 T = np.ones(p + 1)
 T = np.array([37, 11, -12, 7.01])
 
-# Calculate error of out prediction
-Y_ = X @ T
-E = (Y - Y_)**2 @ np.ones(n)
-print(E)
+for i in range(8):
+    # Calculate error of out prediction
+    Y_ = X @ T      # Predicted values.
+    E = (Y_ - Y)
+    J = 1 / (2*n) * E.T @ E
+    T = T - lr/n * X.T @ E
 
+    print(T, "\t", J)
 
-
-# TODO calculate partial derivatives of losss func & implement matrix gradient
-# descent
+    # TODO calculate partial derivatives of losss func & implement matrix gradient
+    # descent
