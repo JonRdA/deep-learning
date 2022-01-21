@@ -1,88 +1,89 @@
-"""Various attempts at solving multivariate linear regression with
-gradient descent algorithm."""
-
-import numpy as np
-
-## Multi variable linear regression with matrices.
-#
-#n = 10     # number of values, instances
-#p = 3       # number of variables
-#lr = .0001
-#
-## Create random numbers between 0 & 100 and add column of ones for constant.
-#x = np.random.random((n,p)) * 100
-#X = np.insert(x, 0, np.ones(n), axis=1)
-#
-## Create variable Y with values of X
-#Y = 37 * X[:, 0] + 11 * X[:,1] - 12 * X[:,2] + 7 * X[:,3]# + .00005*np.random.random(n)
-#
-##b = np.linalg.inv(X.T @ X) @ X.T @ Y
-#
-##Y_ = X @ b
-#
-##plt.plot(X[:, 3], Y, "ro")
-##plt.show()
-#
-##Initialize random parameters vector.
-#theta = np.ones(p + 1)
-#theta = (np.random.random(p + 1) -  0.5) * 200
-##T = np.array([37, 11, -12, 7.01])
-#
-#epochs = 100000
-#err = []
-#
-#for i in range(epochs):
-#    # Calculate error of out prediction
-#    y_pred = X @ theta
-#    error = y_pred - Y
-#    mse = (error**2).sum()
-#    gradients = 2/n * X.T @ error
-#    theta = theta - lr * gradients
-#    if i % 1000 == 0:
-#        print(theta, mse)
-#        err.append(mse)
-#    if i == 8000:
-#        print("here")
-#        lr /=10
-#
-#plt.plot(err[4:])
-#plt.show()
-#
-# ------------------------------------------------------------------------------
-# Gradient descent coded in tensorflow.
-
+"""
+Multivariate linear regression solved with OLS and gradient descent.
+"""
 import numpy as np
 import tensorflow as tf
-from sklearn.datasets import fetch_california_housing
-from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
 
-fetched_data = fetch_california_housing()
-m, n = fetched_data.data.shape
-data_with_bias = np.c_[np.ones((m, 1)), fetched_data.data]
+# Geneate initial dataset.
+n = 5      # variables
+m = 10     # instances
 
-X = tf.constant(data_with_bias, dtype=tf.float32, name="features")
+X = tf.ones([m, 1])
+Y = X
 
-y = tf.constant(fetched_data.target.reshape(-1, 1), dtype=tf.float32, name="target")
+for i in range(1, n + 1):
+    # Generate uniform column value & add to X.
+    x_col = tf.random.uniform([m, 1])
+    X = tf.concat([X, x_col], axis=1)
+    
+    # Add column with factor to Y values.
+    Y = tf.add(Y, x_col * i)
 
-XT = tf.transpose(X)
-theta = tf.matmul(tf.matmul(tf.linalg.inv(tf.matmul(XT, X)), XT), y)
+# Solve with Ordinary Least Squared (OLS) estimator.
+part1 = tf.matmul(tf.transpose(X), X)
+part2 = tf.matmul(tf.transpose(X), Y)
+theta = tf.matmul(tf.linalg.inv(part1), part2)
 print(theta)
 
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(data_with_bias)
+# Solve with gradient descent algorithm
 
-n_epoch = 1000
-learning_rate = .01
+# Cost function
+def cost(theta, X, Y, gradient=False):
+    """Obtain cost function or derivative for point `theta`.
+    J(theta) = 1/2 * (h0 - Y)^2
+    Keyword argument selects derivative or mean squared error value."""
+    h0 = tf.matmul(X, theta)
+    err = tf.subtract(h0, Y)
+    if gradient:
+        return tf.matmul(tf.transpose(X), err)
+    mse = tf.square(err)
+    return tf.divide(mse, 2)
 
-X = tf.constant(scaled_data, dtype=tf.float32, name="scaled")
-theta = tf.Variable(tf.random.uniform([n+1, 1], -1, 1), name="theta")
+def track(res, i, theta, Y):
+    """Track cost value of iteration on list `costs`."""
+    mse = tf.reduce_mean(cost(theta, X, Y), axis=0)
+    res[0].append(i)
+    res[1].append(mse)
 
-for epoch in range(n_epoch):
-    y_pred = tf.matmul(X, theta, name="predictions")
-    error = y_pred - y
-    mse = tf.matmul(tf.transpose(error), error) / m
-    gradients = 2/m * tf.matmul(tf.transpose(X), error)
-    theta = theta - learning_rate * gradients
+# Gradient descent
+lr = .01                # learning rate
+it = 10000              # iterations
+tfr = it // 10          # track frequency
 
-    if epoch % 100 == 0:
-        print("Epoch: ", epoch, "MSE: ", mse)
+def train(X, Y, lr, it, tfr):
+    """ Function to easily perform a gradient descent with some hyperparameters.
+    Train multivariate linear regression with gradient descent, tracking"""
+    # Generate random parameters, initial solution.
+    theta = tf.random.uniform([n + 1, 1])
+    res = [[], []]          # error tracking list
+    
+    for i in range(it):
+        grd = cost(theta, X, Y, gradient=True)
+        theta = theta - grd * lr
+        if (i % tfr) == 0:
+            track(res, i, theta, Y)
+
+    return res
+
+# Gradient descent
+lr = .01                # learning rate
+it = 10000              # iterations
+tfr = it // 10          # track frequency
+
+lrates = [.08, .05, .02, .01, .005, .001]
+errors = []
+
+for lr in lrates:
+    res = train(X, Y, lr, it, tfr)
+    errors.append(res[1][-1])
+
+plt.plot(lrates, errors, "ro-")
+plt.show()
+
+res = train (X, Y, .01, it, tfr)
+[tf.print(i) for i in res[1]]
+plt.plot(res[0], res[1])
+plt.show()
+
+
