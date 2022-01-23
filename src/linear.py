@@ -74,16 +74,14 @@ tfr = it // 10          # track frequency
 lrates = [.08, .05, .02, .01, .005, .001]
 errors = []
 
-for lr in lrates:
-    res = train(X, Y, lr, it, tfr)
-    errors.append(res[1][-1])
+#for lr in lrates:
+#    res = train(X, Y, lr, it, tfr)
+#    errors.append(res[1][-1])
 
-plt.plot(lrates, errors, "ro-")
-plt.show()
+#plt.plot(lrates, errors, "ro-")
+#plt.show()
 
 res = train (X, Y, .01, it, tfr)
 [tf.print(i) for i in res[1]]
 plt.plot(res[0], res[1])
 plt.show()
-
-

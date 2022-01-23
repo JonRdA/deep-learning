@@ -1,8 +1,10 @@
-# IA NOTEBOOK
+# DEEP LEARNING
 
-## Dot CSV tutorials code
+## CODED
+Code developed for learning Tensorflow:
+* Supervised learning and optimization
+* Supervised neural networks (to code)
 
-Completed tutorials:
-
-* IANB 1: linear regression.
-* IANB 3: gradient descent (in process).
+## Include
+* `/src` self coded algorithms from scratch
+* `/tut` DotCSV channel tutorials
