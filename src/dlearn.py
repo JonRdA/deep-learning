@@ -29,8 +29,8 @@ def test():
     lr = .01       # learning rate
     df = 50        # display frequency
 
-    #a = LogReg(x_train[:mm], y_train[:mm])
-    #W = a.train((ep, bs, lr, df))
+    a = LogReg(x_train[:mm], y_train[:mm])
+    W = a.train((ep, bs, lr, df))
 
 def main():
     """Main code to run directly."""

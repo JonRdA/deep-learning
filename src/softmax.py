@@ -30,7 +30,7 @@ class LogReg:
 
         # Training hyperparameters
         self.ep = 500       # epochs
-        self.bs = 256       # batch size
+        self.bs = 256       # minibatch size
         self.lr = .1        # learning rate
         self.df = 50        # display frequency, epochs
     
@@ -109,7 +109,7 @@ class LogReg:
         Ys = tf.gather(self.Y, indices=ind)
         return Xs, Ys
 
-    def get_batches(self, X, Y):
+    def get_minibatches(self, X, Y):
         """Batch generator from shuffled data.
 
         Args:
@@ -117,7 +117,7 @@ class LogReg:
             Y (tensor): class data.
 
         Yields:
-            Xb, Yb (tensors): batch tensors.
+            Xb, Yb (tensors): minibatch tensors.
         """
         count = 0
         m = X.shape[0]
@@ -129,20 +129,6 @@ class LogReg:
             i_0 += self.bs
             i_1 += self.bs
             yield Xb, Yb
-
-    def train_batch(self, W, X, Y):
-        """Train the minibatch applying gradient descent.
-
-        Args:
-            W (tensor): parameters.
-            X (tensor): batch input data.
-            Y (tensor): batch class data.
-
-        Returns:
-            W (tensor): updated parameters.
-        """
-        W -= self.lr * self.gradient(W, X, Y)
-        return W
 
     def train(self, hyp=None):
         """Train model stochastic gradient descent. Optional tuple hyperparams.
@@ -162,8 +148,12 @@ class LogReg:
         for epoch in range(self.ep):
             Xs, Ys = self.shuffle_data(indx)
 
-            for (Xb, Yb) in self.get_batches(Xs, Ys):
-                W = self.train_batch(W, Xb, Yb)
+            grd = tf.zeros((self.n, self.c))
+            for i, (Xb, Yb) in enumerate(self.get_minibatches(Xs, Ys)):
+                grd += self.gradient(W, Xb, Yb)
+
+            grd = grd / (i + 1)
+            W -= self.lr * grd
 
             # TODO stats displaying to function
             if (epoch % self.df) == 0:
